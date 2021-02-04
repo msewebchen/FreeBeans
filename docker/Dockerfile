@@ -11,6 +11,7 @@ ENV ENABLE_HANGUP=true
 ENV ENABLE_WEB_PANEL=true
 
 COPY * /jd
+
 RUN apk update -f \
     && apk upgrade \
     && apk --no-cache add -f bash coreutils moreutils git wget curl nano tzdata perl openssl \

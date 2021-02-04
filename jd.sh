@@ -53,7 +53,34 @@ function Combin_Sub {
     done
     Tmp1=$1$i
     Tmp2=${!Tmp1}
-    CombinAll="${CombinAll}&${Tmp2}"
+    case $# in
+      1)
+        CombinAll="${CombinAll}&${Tmp2}"
+        ;;
+      2)
+        CombinAll="${CombinAll}&${Tmp2}@$2"
+        ;;
+      3)
+        if [ $(($i % 2)) -eq 1 ]; then
+          CombinAll="${CombinAll}&${Tmp2}@$2"
+        else
+          CombinAll="${CombinAll}&${Tmp2}@$3"
+        fi
+        ;;
+      4)
+        case $(($i % 3)) in
+          1)
+            CombinAll="${CombinAll}&${Tmp2}@$2"
+            ;;
+          2)
+            CombinAll="${CombinAll}&${Tmp2}@$3"
+            ;;
+          0)
+            CombinAll="${CombinAll}&${Tmp2}@$4"
+            ;;
+        esac
+        ;;
+    esac
   done
   echo ${CombinAll} | perl -pe "{s|^&||; s|^@+||; s|&@|&|g; s|@+|@|g}"
 }
@@ -77,8 +104,6 @@ function Combin_All {
   export JDSXSY_SHARECODES=$(Combin_Sub ForOtherImmortal)
   export JDSGMH_SHARECODES=$(Combin_Sub ForOtherSgmh)
   export JSMOBILEFESTIVAL_SHARECODES=$(Combin_Sub ForOtherJdMobileFestival)
-  export JD818_SHARECODES=$(Combin_Sub ForOtherJd818)
-  export JDNY_SHARECODES=$(Combin_Sub ForOtherNY)
 }
 
 ## 转换JD_BEAN_SIGN_STOP_NOTIFY或JD_BEAN_SIGN_NOTIFY_SIMPLE
@@ -106,14 +131,21 @@ function Set_Env {
   Trans_UN_SUBSCRIBES
 }
 
-## 随机延迟
+## 随机延迟子程序
+function Random_DelaySub {
+  CurDelay=$((${RANDOM} % ${RandomDelay} + 1))
+  echo -e "\n命令未添加 \"now\"，随机延迟 ${CurDelay} 秒后再执行任务，如需立即终止，请按 CTRL+C...\n"
+  sleep ${CurDelay}
+}
+
+## 随机延迟判断
 function Random_Delay {
-  if [[ -n ${RandomDelay} ]] && [[ ${RandomDelay} -gt 0 ]]; then
-    CurMin=$(date "+%-M")
-    if [[ ${CurMin} -gt 2 && ${CurMin} -lt 30 ]] || [[ ${CurMin} -gt 31 && ${CurMin} -lt 59 ]]; then
-      CurDelay=$((${RANDOM} % ${RandomDelay} + 1))
-      echo -e "\n命令未添加 \"now\"，随机延迟 ${CurDelay} 秒后再执行任务，如需立即终止，请按 CTRL+C...\n"
-      sleep ${CurDelay}
+  if [ -n "${RandomDelay}" ] && [ ${RandomDelay} -gt 0 ]; then
+    CurMin=$(date "+%M")
+    if [ ${CurMin} -gt 2 ] && [ ${CurMin} -lt 30 ]; then
+      Random_DelaySub
+    elif [ ${CurMin} -gt 31 ] && [ ${CurMin} -lt 59 ]; then
+      Random_DelaySub
     fi
   fi
 }
@@ -163,7 +195,7 @@ function Run_Pm2 {
 
 ## 运行挂机脚本
 function Run_HangUp {
-  Import_Conf $1 && Detect_Cron && Set_Env
+  Import_Conf && Detect_Cron && Set_Env
   HangUpJs="jd_crazy_joy_coin"
   cd ${ScriptsDir}
   if type pm2 >/dev/null 2>&1; then
@@ -181,7 +213,7 @@ function Reset_Pwd {
 
 ## 运行京东脚本
 function Run_Normal {
-  Import_Conf $1 && Detect_Cron && Set_Env
+  Import_Conf && Detect_Cron && Set_Env
   
   FileNameTmp1=$(echo $1 | perl -pe "s|\.js||")
   FileNameTmp2=$(echo $1 | perl -pe "{s|jd_||; s|\.js||; s|^|jd_|}")

@@ -1,4 +1,3 @@
-
 /*
  * @Author: Jerrykuku https://github.com/jerrykuku
  * @Date: 2021-1-8
@@ -12,6 +11,9 @@ var bodyParser = require('body-parser');
 var got = require('got');
 var path = require('path');
 var fs = require('fs');
+var {
+    execSync
+} = require('child_process');
 
 var rootPath = path.resolve(__dirname, '..')
 // config.sh 文件所在目录
@@ -74,7 +76,13 @@ function getCookie(response) {
 
 async function step1() {
     try {
-        s_token, cookies, guid, lsid, lstoken, okl_token, token = ""
+        s_token,
+        cookies,
+        guid,
+        lsid,
+        lstoken,
+        okl_token,
+        token = ""
         let timeStamp = (new Date()).getTime()
         let url = 'https://plogin.m.jd.com/cgi-bin/mm/new_login_entrance?lang=chs&appid=300&returnurl=https://wq.jd.com/passport/LoginRedirect?state=' + timeStamp + '&returnurl=https://home.m.jd.com/myJd/newhome.action?sceneval=2&ufc=&/myJd/home.action&source=wq_passport'
         const response = await got(url, {
@@ -91,7 +99,8 @@ async function step1() {
         });
 
         praseSetCookies(response)
-    } catch (error) {
+    }
+    catch (error) {
         cookies = "";
         console.log(error.response.body);
     }
@@ -164,7 +173,11 @@ async function checkLogin() {
     } catch (error) {
         console.log(error.response.body);
         let res = {}
-        res.body = { check_ip: 0, errcode: 222, message: '出错' }
+        res.body = {
+            check_ip: 0,
+            errcode: 222,
+            message: '出错'
+        }
         res.headers = {}
         return res;
     }
@@ -234,6 +247,7 @@ function saveNewConf(file, content) {
             break;
         case "crontab.list":
             fs.writeFileSync(crontabFile, content);
+            execSync('crontab ' + crontabFile);
             break;
         case "diy.sh":
             fs.writeFileSync(diyFile, content);
@@ -268,7 +282,7 @@ function getLastModifyFilePath(dir) {
 
         var arr = fs.readdirSync(dir);
 
-        arr.forEach(function (item) {
+        arr.forEach(function(item) {
             var fullpath = path.join(dir, item);
             var stats = fs.statSync(fullpath);
             if (stats.isFile()) {
@@ -288,14 +302,19 @@ app.use(session({
     resave: true,
     saveUninitialized: true
 }));
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(bodyParser.json({
+    limit: '50mb'
+}));
+app.use(bodyParser.urlencoded({
+    limit: '50mb',
+    extended: true
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 /**
  * 登录页面
  */
-app.get('/', function (request, response) {
+app.get('/', function(request, response) {
     if (request.session.loggedin) {
         response.redirect('./home');
     } else {
@@ -306,7 +325,7 @@ app.get('/', function (request, response) {
 /**
  * 用户名密码
  */
-app.get('/changepwd', function (request, response) {
+app.get('/changepwd', function(request, response) {
     if (request.session.loggedin) {
         response.sendFile(path.join(__dirname + '/public/pwd.html'));
     } else {
@@ -318,23 +337,35 @@ app.get('/changepwd', function (request, response) {
  * 获取二维码链接
  */
 
-app.get('/qrcode', function (request, response) {
+app.get('/qrcode', function(request, response) {
     if (request.session.loggedin) {
         (async () => {
             try {
                 await step1();
                 const qrurl = await step2();
                 if (qrurl != 0) {
-                    response.send({ err: 0, qrcode: qrurl });
+                    response.send({
+                        err: 0,
+                        qrcode: qrurl
+                    });
                 } else {
-                    response.send({ err: 1, msg: "错误" });
+                    response.send({
+                        err: 1,
+                        msg: "错误"
+                    });
                 }
             } catch (err) {
-                response.send({ err: 1, msg: err });
+                response.send({
+                    err: 1,
+                    msg: err
+                });
             }
         })();
     } else {
-        response.send({ err: 1, msg: loginFaild });
+        response.send({
+            err: 1,
+            msg: loginFaild
+        });
     }
 })
 
@@ -342,23 +373,35 @@ app.get('/qrcode', function (request, response) {
  * 获取返回的cookie信息
  */
 
-app.get('/cookie', function (request, response) {
+app.get('/cookie', function(request, response) {
     if (request.session.loggedin && cookies != "") {
         (async () => {
             try {
                 const cookie = await checkLogin();
                 if (cookie.body.errcode == 0) {
                     let ucookie = getCookie(cookie);
-                    response.send({ err: 0, cookie: ucookie });
+                    response.send({
+                        err: 0,
+                        cookie: ucookie
+                    });
                 } else {
-                    response.send({ err: cookie.body.errcode, msg: cookie.body.message });
+                    response.send({
+                        err: cookie.body.errcode,
+                        msg: cookie.body.message
+                    });
                 }
             } catch (err) {
-                response.send({ err: 1, msg: err });
+                response.send({
+                    err: 1,
+                    msg: err
+                });
             }
         })();
     } else {
-        response.send({ err: 1, msg: loginFaild });
+        response.send({
+            err: 1,
+            msg: loginFaild
+        });
     }
 })
 
@@ -366,7 +409,7 @@ app.get('/cookie', function (request, response) {
  * 获取各种配置文件api
  */
 
-app.get('/api/config/:key', function (request, response) {
+app.get('/api/config/:key', function(request, response) {
     if (request.session.loggedin) {
         if (configString.indexOf(request.params.key) > -1) {
             switch (request.params.key) {
@@ -402,7 +445,7 @@ app.get('/api/config/:key', function (request, response) {
 /**
  * 首页 配置页面
  */
-app.get('/home', function (request, response) {
+app.get('/home', function(request, response) {
     if (request.session.loggedin) {
         response.sendFile(path.join(__dirname + '/public/home.html'));
     } else {
@@ -414,7 +457,7 @@ app.get('/home', function (request, response) {
 /**
  * 对比 配置页面
  */
-app.get('/diff', function (request, response) {
+app.get('/diff', function(request, response) {
     if (request.session.loggedin) {
         response.sendFile(path.join(__dirname + '/public/diff.html'));
     } else {
@@ -426,7 +469,7 @@ app.get('/diff', function (request, response) {
 /**
  * Share Code 页面
  */
-app.get('/shareCode', function (request, response) {
+app.get('/shareCode', function(request, response) {
     if (request.session.loggedin) {
         response.sendFile(path.join(__dirname + '/public/shareCode.html'));
     } else {
@@ -438,7 +481,7 @@ app.get('/shareCode', function (request, response) {
 /**
  * crontab 配置页面
  */
-app.get('/crontab', function (request, response) {
+app.get('/crontab', function(request, response) {
     if (request.session.loggedin) {
         response.sendFile(path.join(__dirname + '/public/crontab.html'));
     } else {
@@ -450,7 +493,7 @@ app.get('/crontab', function (request, response) {
 /**
  * 自定义脚本 页面
  */
-app.get('/diy', function (request, response) {
+app.get('/diy', function(request, response) {
     if (request.session.loggedin) {
         response.sendFile(path.join(__dirname + '/public/diy.html'));
     } else {
@@ -463,22 +506,30 @@ app.get('/diy', function (request, response) {
 /**
  * auth
  */
-app.post('/auth', function (request, response) {
+app.post('/auth', function(request, response) {
     let username = request.body.username;
     let password = request.body.password;
-    fs.readFile(authConfigFile, 'utf8', function (err, data) {
+    fs.readFile(authConfigFile, 'utf8', function(err, data) {
         if (err) console.log(err);
         var con = JSON.parse(data);
         if (username && password) {
             if (username == con.user && password == con.password) {
                 request.session.loggedin = true;
                 request.session.username = username;
-                response.send({ err: 0 });
+                response.send({
+                    err: 0
+                });
             } else {
-                response.send({ err: 1, msg: authError });
+                response.send({
+                    err: 1,
+                    msg: authError
+                });
             }
         } else {
-            response.send({ err: 1, msg: "请输入用户名密码!" });
+            response.send({
+                err: 1,
+                msg: "请输入用户名密码!"
+            });
 
         }
     });
@@ -488,7 +539,7 @@ app.post('/auth', function (request, response) {
 /**
  * change pwd
  */
-app.post('/changepass', function (request, response) {
+app.post('/changepass', function(request, response) {
     if (request.session.loggedin) {
         let username = request.body.username;
         let password = request.body.password;
@@ -496,11 +547,17 @@ app.post('/changepass', function (request, response) {
             user: username,
             password: password
         }
-        fs.writeFile(authConfigFile, JSON.stringify(config), function (err) {
+        fs.writeFile(authConfigFile, JSON.stringify(config), function(err) {
             if (err) {
-                response.send({ err: 1, msg: "写入错误请重试!" });
+                response.send({
+                    err: 1,
+                    msg: "写入错误请重试!"
+                });
             } else {
-                response.send({ err: 0, msg: "更新成功!" });
+                response.send({
+                    err: 0,
+                    msg: "更新成功!"
+                });
             }
         })
 
@@ -513,7 +570,7 @@ app.post('/changepass', function (request, response) {
 /**
  * change pwd
  */
-app.get('/logout', function (request, response) {
+app.get('/logout', function(request, response) {
     request.session.destroy()
     response.redirect('./');
 
@@ -523,14 +580,22 @@ app.get('/logout', function (request, response) {
  * save config
  */
 
-app.post('/api/save', function (request, response) {
+app.post('/api/save', function(request, response) {
     if (request.session.loggedin) {
         let postContent = request.body.content;
         let postfile = request.body.name;
         saveNewConf(postfile, postContent);
-        response.send({ err: 0, title: "保存成功! ", msg: "将自动刷新页面查看修改后的 " + postfile + " 文件" });
+        response.send({
+            err: 0,
+            title: "保存成功! ",
+            msg: "将自动刷新页面查看修改后的 " + postfile + " 文件"
+        });
     } else {
-        response.send({ err: 1, title: "保存失败! ", msg: loginFaild });
+        response.send({
+            err: 1,
+            title: "保存失败! ",
+            msg: loginFaild
+        });
     }
 
 });
@@ -538,7 +603,7 @@ app.post('/api/save', function (request, response) {
 /**
  * 日志查询 页面
  */
-app.get('/log', function (request, response) {
+app.get('/log', function(request, response) {
     if (request.session.loggedin) {
         response.sendFile(path.join(__dirname + '/public/tasklog.html'));
     } else {
@@ -549,7 +614,7 @@ app.get('/log', function (request, response) {
 /**
  * 日志列表
  */
-app.get('/api/logs', function (request, response) {
+app.get('/api/logs', function(request, response) {
     if (request.session.loggedin) {
         var fileList = fs.readdirSync(logPath, 'utf-8');
         var dirs = [];
@@ -580,7 +645,7 @@ app.get('/api/logs', function (request, response) {
 /**
  * 日志文件
  */
-app.get('/api/logs/:dir/:file', function (request, response) {
+app.get('/api/logs/:dir/:file', function(request, response) {
     if (request.session.loggedin) {
         var filePath = logPath + request.params.dir + '/' + request.params.file;
         var content = getFileContentByName(filePath);

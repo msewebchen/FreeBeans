@@ -139,27 +139,27 @@ function Notify_NewTask {
 }
 
 ## 检测配置文件版本
-function Notify_Version {
-  [ -f "${SendCount}" ] && [[ $(cat ${SendCount}) != ${VerConfSample} ]] && rm -f ${SendCount}
-  UpdateDate=$(grep " Date: " ${FileConfSample} | awk -F ": " '{print $2}')
-  UpdateContent=$(grep " Update Content: " ${FileConfSample} | awk -F ": " '{print $2}')
-  if [ -f ${FileConf} ] && [[ "${VerConf}" != "${VerConfSample}" ]] && [[ ${UpdateDate} == $(date "+%Y-%m-%d") ]]
-  then
-    if [ ! -f ${SendCount} ]; then
-      echo -e "检测到配置文件config.sh.sample有更新\n\n更新日期: ${UpdateDate}\n当前版本: ${VerConf}\n新的版本: ${VerConfSample}\n更新内容: ${UpdateContent}\n如需使用新功能请对照config.sh.sample，将相关新参数手动增加到你自己的config.sh中，否则请无视本消息。\n" | tee ${ContentVersion}
-      echo -e "本消息只在该新版本配置文件更新当天发送一次。" >> ${ContentVersion}
-      cd ${ShellDir}
-      node update.js
-      if [ $? -eq 0 ]; then
-        echo "${VerConfSample}" > ${SendCount}
-        [ -f ${ContentVersion} ] && rm -f ${ContentVersion}
-      fi
-    fi
-  else
-    [ -f ${ContentVersion} ] && rm -f ${ContentVersion}
-    [ -f ${SendCount} ] && rm -f ${SendCount}
-  fi
-}
+# function Notify_Version {
+#   [ -f "${SendCount}" ] && [[ $(cat ${SendCount}) != ${VerConfSample} ]] && rm -f ${SendCount}
+#   UpdateDate=$(grep " Date: " ${FileConfSample} | awk -F ": " '{print $2}')
+#   UpdateContent=$(grep " Update Content: " ${FileConfSample} | awk -F ": " '{print $2}')
+#   if [ -f ${FileConf} ] && [[ "${VerConf}" != "${VerConfSample}" ]] && [[ ${UpdateDate} == $(date "+%Y-%m-%d") ]]
+#   then
+#     if [ ! -f ${SendCount} ]; then
+#       echo -e "检测到配置文件config.sh.sample有更新\n\n更新日期: ${UpdateDate}\n当前版本: ${VerConf}\n新的版本: ${VerConfSample}\n更新内容: ${UpdateContent}\n如需使用新功能请对照config.sh.sample，将相关新参数手动增加到你自己的config.sh中，否则请无视本消息。\n" | tee ${ContentVersion}
+#       echo -e "本消息只在该新版本配置文件更新当天发送一次。" >> ${ContentVersion}
+#       cd ${ShellDir}
+#       node update.js
+#       if [ $? -eq 0 ]; then
+#         echo "${VerConfSample}" > ${SendCount}
+#         [ -f ${ContentVersion} ] && rm -f ${ContentVersion}
+#       fi
+#     fi
+#   else
+#     [ -f ${ContentVersion} ] && rm -f ${ContentVersion}
+#     [ -f ${SendCount} ] && rm -f ${SendCount}
+#   fi
+# }
 
 ## npm install 子程序，判断是否为安卓，判断是否安装有yarn
 function Npm_InstallSub {
@@ -313,7 +313,7 @@ if [[ ${ExitStatusScripts} -eq 0 ]]
 then
   echo -e "js脚本更新完成...\n"
   Change_ALL
-  [ -d ${ScriptsDir}/node_modules ] && Notify_Version
+  # [ -d ${ScriptsDir}/node_modules ] && Notify_Version
   Diff_Cron
   Npm_Install
   Output_ListJsAdd

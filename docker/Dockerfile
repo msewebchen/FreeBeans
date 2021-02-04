@@ -10,7 +10,7 @@ ENV PS1="\u@\h:\w \$ "
 ENV ENABLE_HANGUP=true
 ENV ENABLE_WEB_PANEL=true
 
-COPY * /jd
+COPY ./ /jd
 
 RUN apk update -f \
     && apk upgrade \

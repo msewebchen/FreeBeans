@@ -10,8 +10,8 @@ ENV PS1="\u@\h:\w \$ "
 ENV ENABLE_HANGUP=true
 ENV ENABLE_WEB_PANEL=true
 
-RUN mkdir /jd && mv * /jd/ \
-    && apk update -f \
+COPY * /jd
+RUN apk update -f \
     && apk upgrade \
     && apk --no-cache add -f bash coreutils moreutils git wget curl nano tzdata perl openssl \
     && rm -rf /var/cache/apk/* \
